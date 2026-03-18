@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#060305">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Lynch Bingo">
+<meta name="description" content="David Lynch Kino-Bingo — für die lange Nacht im Kino">
+<link rel="manifest" href="/manifest.json">
+<title>David Lynch — Kino Bingo</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,900;1,400&family=Libre+Baskerville:wght@400;700&display=swap');
+
+  :root {
+    --red:       #8B0000;
+    --red-light: #cc2200;
+    --cream:     #f5ead8;
+    --darker:    #060305;
+    --gold:      #c9a84c;
+    --curtain:   #6b1a1a;
+  }
+
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--darker);
+    color: var(--cream);
+    font-family: 'Libre Baskerville', Georgia, serif;
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 3vw max(60px, env(safe-area-inset-bottom, 60px));
+    overflow-x: hidden;
+    -webkit-tap-highlight-color: transparent;
+    background-image: repeating-linear-gradient(
+      0deg, transparent, transparent 2px,
+      rgba(139,0,0,0.03) 2px, rgba(139,0,0,0.03) 4px
+    );
+  }
+
+  /* ── Curtain ── */
+  .curtain-top {
+    width: calc(100% + 6vw);
+    margin-inline-start: -3vw;
+    height: 24px;
+    background: repeating-linear-gradient(90deg, var(--curtain) 0, #3d0e0e 18px, var(--curtain) 36px);
+    border-bottom: 3px solid var(--gold);
+    flex-shrink: 0;
+  }
+
+  /* ── Header ── */
+  header {
+    text-align: center;
+    padding: 20px 0 14px;
+    width: 100%;
+  }
+
+  .pre-title {
+    font-size: clamp(9px, 2.5vw, 11px);
+    letter-spacing: 5px;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-block-end: 6px;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(22px, 8vw, 44px);
+    font-weight: 900;
+    line-height: 1.05;
+    color: var(--cream);
+    text-shadow: 0 0 40px rgba(139,0,0,0.8), 0 2px 8px rgba(0,0,0,0.9);
+  }
+
+  h1 span { color: var(--red-light); font-style: italic; }
+
+  .subtitle {
+    font-size: clamp(9px, 2.5vw, 12px);
+    letter-spacing: 4px;
+    color: var(--gold);
+    margin-block-start: 7px;
+    text-transform: uppercase;
+  }
+
+  .divider {
+    width: 80px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    margin: 12px auto;
+  }
+
+  /* ── Wake-Lock Status ── */
+  .wake-status {
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(201,168,76,0.35);
+    text-align: center;
+    margin-block-end: 8px;
+    height: 14px;
+    transition: color 0.3s;
+  }
+  .wake-status.active { color: rgba(201,168,76,0.65); }
+
+  /* ── Card ── */
+  .card-wrapper { width: 100%; }
+
+  .card-id {
+    font-size: clamp(8px, 2vw, 10px);
+    letter-spacing: 3px;
+    color: rgba(201,168,76,0.5);
+    text-align: center;
+    margin-block-end: 6px;
+    text-transform: uppercase;
+  }
+
+  /* ── BINGO header row ── */
+  .bingo-header-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 3px;
+    margin-block-end: 3px;
+  }
+
+  .bingo-letter {
+    background: var(--red);
+    color: var(--cream);
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(14px, 5vw, 26px);
+    font-weight: 900;
+    text-align: center;
+    padding: 8px 2px;
+    border: 1px solid rgba(201,168,76,0.3);
+    text-shadow: 0 0 10px rgba(255,100,50,0.5);
+  }
+
+  /* ── Grid ── */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 3px;
+    width: 100%;
+  }
+
+  .cell {
+    aspect-ratio: 1 / 1;
+    background: rgba(15, 5, 8, 0.9);
+    border: 1px solid rgba(139, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-family: 'Libre Baskerville', Georgia, serif;
+    font-size: clamp(6px, 2.5vw, 11px);
+    line-height: 1.25;
+    padding: 3px;
+    cursor: pointer;
+    transition: background 0.12s, transform 0.1s;
+    color: var(--cream);
+    position: relative;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+    overflow: hidden;
+    word-break: break-word;
+    hyphens: auto;
+  }
+
+  .cell:active { transform: scale(0.94); }
+
+  .cell:focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: -2px;
+  }
+
+  .cell.marked {
+    background: var(--red);
+    border-color: var(--red-light);
+    color: #fff;
+    text-shadow: 0 0 6px rgba(255,150,100,0.5);
+  }
+
+  .cell.marked::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle, rgba(255,60,0,0.2) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .cell.free {
+    background: rgba(40, 5, 5, 0.95);
+    border-color: var(--gold);
+    color: var(--gold);
+    font-size: clamp(6px, 2.2vw, 10px);
+    cursor: default;
+  }
+
+  .cell.free.marked {
+    background: var(--red);
+    border-color: var(--gold);
+    color: #fff;
+  }
+
+  /* ── Buttons ── */
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    margin-block-start: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  button {
+    font-family: 'Libre Baskerville', Georgia, serif;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-size: clamp(10px, 2.5vw, 12px);
+    padding: 14px 20px;
+    min-height: 48px;
+    cursor: pointer;
+    border: 1px solid var(--gold);
+    transition: background 0.15s, color 0.15s, transform 0.1s;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-appearance: none;
+    border-radius: 0;
+  }
+
+  button:focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 2px;
+  }
+
+  button:active { transform: scale(0.97); }
+
+  .btn-new { background: var(--red); color: var(--cream); border-color: var(--red-light); }
+  .btn-new:hover { background: var(--red-light); }
+  .btn-reset { background: transparent; color: var(--gold); }
+  .btn-reset:hover { background: rgba(201,168,76,0.1); }
+
+  /* ── Win overlay ── */
+  .bingo-win {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.92);
+    z-index: 100;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  .bingo-win.show { display: flex; }
+
+  .bingo-win-text {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(60px, 22vw, 110px);
+    font-weight: 900;
+    color: var(--red-light);
+    animation: pulse 1s infinite alternate;
+    letter-spacing: 4px;
+  }
+
+  .bingo-sub {
+    font-size: clamp(11px, 3vw, 14px);
+    letter-spacing: 4px;
+    color: var(--gold);
+    margin-block-start: 14px;
+    text-transform: uppercase;
+  }
+
+  .bingo-hint {
+    font-size: 10px;
+    color: rgba(245,234,216,0.35);
+    margin-block-start: 22px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  @keyframes pulse {
+    from { text-shadow: 0 0 40px rgba(255,30,0,1), 0 0 80px rgba(200,0,0,0.4); }
+    to   { text-shadow: 0 0 80px rgba(255,80,0,1), 0 0 160px rgba(255,0,0,0.6); }
+  }
+
+  .footer-text {
+    margin-block-start: 24px;
+    font-size: 9px;
+    color: rgba(245,234,216,0.2);
+    letter-spacing: 3px;
+    text-align: center;
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+
+<div class="curtain-top"></div>
+
+<header>
+  <div class="pre-title">David Lynch · Kino-Abend</div>
+  <h1>DAVID LYNCH<br><span>Kino Bingo</span></h1>
+  <div class="subtitle">🎬 Viel Erfolg</div>
+  <div class="divider"></div>
+</header>
+
+<div class="wake-status" id="wakeStatus"></div>
+
+<div class="card-wrapper">
+  <div class="card-id" id="cardId">Karte #—</div>
+
+  <div class="bingo-header-row">
+    <div class="bingo-letter">B</div>
+    <div class="bingo-letter">I</div>
+    <div class="bingo-letter">N</div>
+    <div class="bingo-letter">G</div>
+    <div class="bingo-letter">O</div>
+  </div>
+
+  <div class="grid" id="grid" role="grid" aria-label="Bingo-Karte"></div>
+
+  <div class="btn-row">
+    <button class="btn-new" onclick="newCard()">✦ Neue Karte</button>
+    <button class="btn-reset" onclick="resetCard()">Zurücksetzen</button>
+  </div>
+</div>
+
+<p class="footer-text">🕯 The owls are not what they seem 🕯</p>
+
+<div class="bingo-win" id="winOverlay" role="dialog" aria-modal="true" aria-label="Bingo gewonnen">
+  <div class="bingo-win-text">BINGO</div>
+  <div class="bingo-sub">Lynch würde nicken</div>
+  <div class="bingo-hint">Tippen zum Schließen</div>
+</div>
+
+<script>
+// ── Screen Wake Lock — hält den Bildschirm wach im Kino ──
+let wakeLock = null;
+
+async function requestWakeLock() {
+  if (!('wakeLock' in navigator)) return;
+  try {
+    wakeLock = await navigator.wakeLock.request('screen');
+    const el = document.getElementById('wakeStatus');
+    el.textContent = '🕯 Bildschirm bleibt wach';
+    el.classList.add('active');
+    wakeLock.addEventListener('release', () => {
+      document.getElementById('wakeStatus').classList.remove('active');
+      document.getElementById('wakeStatus').textContent = '';
+    });
+  } catch (e) {
+    // Wird still ignoriert wenn nicht unterstützt
+  }
+}
+
+// Wake Lock nach Sichtbarkeitswechsel neu anfordern
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') requestWakeLock();
+});
+
+requestWakeLock();
+
+// ── Bingo-Inhalte ──
+const ALL_ITEMS = [
+  // Im Film – Visuell
+  "Rote Vorhänge",
+  "Ventilator dreht sich",
+  "Fernseher flimmert",
+  "Stromleitungen am Straßenrand",
+  "Licht flackert",
+  "Jemand raucht",
+  "Neblige Waldstraße",
+  "Nahaufnahme einer Hand",
+  "Figur geht langsam auf Kamera zu",
+  "Leere Straße mit Mittelstreifen",
+  "Spiegel im Bild",
+  "Tür öffnet sich ins Nichts",
+  "Kaffee im Film",
+  "Jemand isst",
+  "Roter Raum",
+  "Nahaufnahme eines Auges",
+  "Wald von unten gefilmt",
+  "Jemand steht einfach nur da",
+  // Im Film – Stimmung
+  "Traumsequenz",
+  "Dialog klingt seltsam falsch",
+  "Jemand spricht rückwärts",
+  "Figur erscheint aus dem Nichts",
+  "Szene ohne Erklärung",
+  "Jemand schreit",
+  "Jemand weint",
+  "Figur lacht & weint gleichzeitig",
+  "Übernatürliches Wesen",
+  "Musik wird plötzlich bedrohlich",
+  "Lange Stille",
+  "Figur verschwindet unerklärlich",
+  "Kamera hält zu lang drauf",
+  // Ich im Kino
+  "Du nickst kurz ein",
+  "Du fühlst dich unwohl",
+  "Du willst lachen und weinen",
+  "Du verstehst es nicht, schaust aber gebannt",
+  "Du hast kurz vergessen zu atmen",
+  "Du willst jemanden fragen ob das normal ist",
+  "Du bist froh dass das Kino dunkel ist",
+  "Jemand verlässt das Kino",
+  "Jemand flüstert: Was war das?",
+  "Jemand lacht nervös",
+  "Alle sind mucksmäuschenstill",
+  "Alle lachen gleichzeitig",
+];
+
+const FREE_CELL = "🦉\nFREI\n🦉";
+let cardState = Array(25).fill(false);
+let cardItems = [];
+let cardNum = 0;
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function newCard() {
+  cardNum = Math.floor(Math.random() * 9000) + 1000;
+  cardState = Array(25).fill(false);
+  cardState[12] = true;
+  const picked = shuffle(ALL_ITEMS).slice(0, 24);
+  picked.splice(12, 0, FREE_CELL);
+  cardItems = picked;
+  render();
+}
+
+function resetCard() {
+  cardState = Array(25).fill(false);
+  cardState[12] = true;
+  render();
+}
+
+function toggle(i) {
+  if (i === 12) return;
+  cardState[i] = !cardState[i];
+  render();
+  if (checkWin()) {
+    setTimeout(() => document.getElementById('winOverlay').classList.add('show'), 200);
+  }
+}
+
+function checkWin() {
+  const s = cardState;
+  for (let r = 0; r < 5; r++) if ([0,1,2,3,4].every(c => s[r*5+c])) return true;
+  for (let c = 0; c < 5; c++) if ([0,1,2,3,4].every(r => s[r*5+c])) return true;
+  if ([0,6,12,18,24].every(i => s[i])) return true;
+  if ([4,8,12,16,20].every(i => s[i])) return true;
+  return false;
+}
+
+function render() {
+  document.getElementById('cardId').textContent = `Karte #${cardNum}`;
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  for (let i = 0; i < 25; i++) {
+    const cell = document.createElement('div');
+    const isFree = i === 12;
+    cell.className = 'cell' + (isFree ? ' free' : '') + (cardState[i] ? ' marked' : '');
+    cell.textContent = cardItems[i] || '';
+    cell.setAttribute('role', 'gridcell');
+    cell.setAttribute('tabindex', isFree ? '-1' : '0');
+    cell.setAttribute('aria-pressed', String(cardState[i]));
+    if (!isFree) {
+      cell.onclick = () => toggle(i);
+      cell.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(i); } };
+    }
+    grid.appendChild(cell);
+  }
+}
+
+// Win overlay schließen
+document.getElementById('winOverlay').addEventListener('click', () => {
+  document.getElementById('winOverlay').classList.remove('show');
+});
+
+// Service Worker registrieren
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
+
+newCard();
+</script>
+</body>
+</html>
