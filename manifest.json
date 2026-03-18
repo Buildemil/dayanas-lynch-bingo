@@ -1,7 +1,7 @@
 {
-  "name": "David Lynch Kino Bingo",
-  "short_name": "Lynch Bingo",
-  "description": "Bingo für den David Lynch Kino-Abend",
+  "name": "Twin Peaks Kino Bingo",
+  "short_name": "Twin Peaks Bingo",
+  "description": "Twin Peaks: Fire Walk With Me — Kino Bingo",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#060305",
